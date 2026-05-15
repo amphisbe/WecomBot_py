@@ -63,15 +63,25 @@ LOG_LEVEL=INFO
 
 ### 4. 启动服务
 
+**推荐方式（自动读取 `.env` 中的 `APP_HOST` / `APP_PORT`）：**
+
+```bash
+# 方式一：使用根目录快捷脚本
+python run.py
+
+# 方式二：以模块方式运行
+python -m app.main
+```
+
+> 以上两种方式均会在启动时自动加载 `.env` 文件，无需手动指定 `--host` 和 `--port`。
+
+**使用 uvicorn 命令行启动（需手动指定参数）：**
+
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 9002
 ```
 
-或直接运行：
-
-```bash
-python -m app.main
-```
+> `uvicorn` 命令行直接加载 `app` 对象，不执行 `__main__` 块，因此无法自动读取 `.env` 中的 `APP_HOST` / `APP_PORT`，需手动传入。
 
 ### 5. 在企业微信后台配置回调地址
 
@@ -88,8 +98,8 @@ http://bot.qianjing.tech:9002/work/bot/callback
 ```
 WecomBot_py/
 ├── app/
-│   ├── main.py              # FastAPI 应用入口
-│   ├── config.py            # 配置管理（pydantic-settings）
+│   ├── main.py              # FastAPI 应用入口 + start() 启动函数
+│   ├── config.py            # 配置管理（pydantic-settings，自动读取 .env）
 │   ├── core/
 │   │   ├── wx_crypt.py      # 企业微信消息加解密（AES-256-CBC + SHA1 签名）
 │   │   └── msg_parser.py    # 消息 XML 解析与回复构造
@@ -99,6 +109,7 @@ WecomBot_py/
 │       └── message_handler.py  # 消息业务处理分发器
 ├── tests/
 │   └── test_wx_crypt.py     # 加解密单元测试
+├── run.py                   # 快捷启动脚本（自动读取 .env）
 ├── .env.example             # 环境变量配置示例
 ├── requirements.txt         # Python 依赖
 └── README.md

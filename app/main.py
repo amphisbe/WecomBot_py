@@ -2,11 +2,16 @@
 """
 企业微信智能机器人回调服务 —— FastAPI 应用主入口
 
-启动方式：
+启动方式（推荐，自动读取 .env 中的 APP_HOST / APP_PORT）：
+  python -m app.main
+  python run.py
+
+使用 uvicorn 命令行启动时，host/port 须手动指定（uvicorn 不执行
+__main__ 块，无法自动读取 .env 中的 APP_HOST/APP_PORT）：
   uvicorn app.main:app --host 0.0.0.0 --port 9002
 
-或直接运行本文件：
-  python -m app.main
+若希望 uvicorn 命令行也能读取 .env，可借助 python-dotenv 在 shell
+中预先导出环境变量，或直接使用 `python run.py`。
 """
 
 import logging
@@ -67,11 +72,12 @@ async def health_check():
 
 
 # ---------------------------------------------------------------------------
-# 启动入口
+# 启动函数（供 run.py 和 python -m app.main 复用）
 # ---------------------------------------------------------------------------
-if __name__ == "__main__":
+def start() -> None:
+    """从 settings（.env 文件或环境变量）读取 host/port 并启动 uvicorn。"""
     logger.info(
-        "启动 WecomBot 服务，监听 %s:%d",
+        "启动 WecomBot 服务，监听 %s:%d（来源：.env / 环境变量）",
         settings.APP_HOST,
         settings.APP_PORT,
     )
@@ -82,3 +88,10 @@ if __name__ == "__main__":
         reload=False,
         log_level=settings.LOG_LEVEL.lower(),
     )
+
+
+# ---------------------------------------------------------------------------
+# 直接运行入口：python -m app.main
+# ---------------------------------------------------------------------------
+if __name__ == "__main__":
+    start()
