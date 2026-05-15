@@ -15,7 +15,9 @@ __main__ 块，无法自动读取 .env 中的 APP_HOST/APP_PORT）：
 """
 
 import logging
+import os
 import sys
+from logging.handlers import RotatingFileHandler
 
 import uvicorn
 from fastapi import FastAPI
@@ -24,15 +26,54 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routers.callback import router as callback_router
 
+
 # ---------------------------------------------------------------------------
-# 日志配置
+# 日志配置（同时输出到控制台和滚动日志文件）
 # ---------------------------------------------------------------------------
-logging.basicConfig(
-    level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
-    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    stream=sys.stdout,
-)
+
+def _setup_logging() -> None:
+    """
+    初始化日志系统：
+      - 控制台（stdout）：实时查看运行状态
+      - 文件（logs/wecombot.log）：持久化记录，按大小轮转（10 MB × 5 个备份）
+    日志目录不存在时自动创建。
+    """
+    log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
+    os.makedirs(log_dir, exist_ok=True)
+    log_file = os.path.join(log_dir, "wecombot.log")
+
+    log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
+    fmt = logging.Formatter(
+        fmt="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    # 控制台 Handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(fmt)
+
+    # 文件 Handler（按大小轮转：单文件最大 10 MB，保留最近 5 个备份）
+    file_handler = RotatingFileHandler(
+        filename=log_file,
+        maxBytes=10 * 1024 * 1024,   # 10 MB
+        backupCount=5,
+        encoding="utf-8",
+    )
+    file_handler.setFormatter(fmt)
+
+    logging.basicConfig(
+        level=log_level,
+        handlers=[console_handler, file_handler],
+    )
+
+    logging.getLogger(__name__).info(
+        "日志系统已初始化，日志文件：%s，级别：%s",
+        log_file,
+        settings.LOG_LEVEL.upper(),
+    )
+
+
+_setup_logging()
 logger = logging.getLogger(__name__)
 
 

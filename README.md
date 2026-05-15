@@ -53,6 +53,7 @@ cp .env.example .env
 WECOM_TOKEN=your_token_here
 WECOM_ENCODING_AES_KEY=your_encoding_aes_key_here
 WECOM_CORP_ID=wwxxxxxxxxxxxxxxxxxx
+APP_HOST=0.0.0.0
 APP_PORT=9002
 LOG_LEVEL=INFO
 ```
@@ -110,6 +111,8 @@ WecomBot_py/
 ├── tests/
 │   └── test_wx_crypt.py     # 加解密单元测试
 ├── run.py                   # 快捷启动脚本（自动读取 .env）
+├── logs/                    # 运行日志目录（自动创建，已加入 .gitignore）
+│   └── wecombot.log         # 滚动日志文件（10 MB × 5 个备份）
 ├── .env.example             # 环境变量配置示例
 ├── requirements.txt         # Python 依赖
 └── README.md
