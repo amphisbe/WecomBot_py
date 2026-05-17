@@ -26,23 +26,26 @@ from fastapi import APIRouter, Query, Request, Response
 from fastapi.responses import PlainTextResponse
 
 from app.core.msg_parser import parse_message
-from app.core.wx_crypt import WXBizMsgCrypt, WXCryptError
+# from app.core.wx_crypt import WXBizMsgCrypt, WXCryptError
 from app.handlers.message_handler import handle_message
 from app.config import settings
+
+from app.vendor.wecom_callback.WXBizJsonMsgCrypt import WXBizJsonMsgCrypt, WXCryptError
+from app.vendor.wecom_callback.ierror import ierror
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 # 全局加解密实例（在应用启动时初始化，避免每次请求重复创建）
-_wx_crypt: WXBizMsgCrypt | None = None
+_wx_crypt: WXBizJsonMsgCrypt | None = None
 
 
-def get_wx_crypt() -> WXBizMsgCrypt:
-    """获取（或懒加载初始化）WXBizMsgCrypt 实例。"""
+def get_wx_crypt() -> WXBizJsonMsgCrypt:
+    """获取（或懒加载初始化）WXBizJsonMsgCrypt 实例。"""
     global _wx_crypt
     if _wx_crypt is None:
-        _wx_crypt = WXBizMsgCrypt(
+        _wx_crypt = WXBizJsonMsgCrypt(
             token=settings.WECOM_TOKEN,
             encoding_aes_key=settings.WECOM_ENCODING_AES_KEY,
             receive_id=settings.WECOM_CORP_ID,
@@ -74,10 +77,24 @@ async def verify_callback_url(
 
     企业微信要求在 **1 秒内** 响应，且响应体必须是解密后的 echostr 明文，
     不能包含引号、BOM 头或换行符。
+
+    wxcpt=WXBizJsonMsgCrypt(sToken,sEncodingAESKey,sCorpID)
+   sVerifyMsgSig="012bc692d0a58dd4b10f8dfe5c4ac00ae211ebeb"
+   sVerifyTimeStamp="1476416373"
+   sVerifyNonce="47744683"
+   sVerifyEchoStr="fsi1xnbH4yQh0+PJxcOdhhK6TDXkjMyhEPA7xB2TGz6b+g7xyAbEkRxN/3cNXW9qdqjnoVzEtpbhnFyq6SVHyA=="
+   ret,sEchoStr=wxcpt.VerifyURL(sVerifyMsgSig, sVerifyTimeStamp,sVerifyNonce,sVerifyEchoStr)
+   if(ret!=0):
+      print("ERR: VerifyURL ret: " + str(ret))
+      sys.exit(1)
+   else:
+      print("done VerifyURL")
+      #验证URL成功，将sEchoStr返回给企业号
+
     """
     logger.info(
-        "[URL验证] msg_signature=%s, timestamp=%s, nonce=%s",
-        msg_signature, timestamp, nonce,
+        "[URL验证] msg_signature=%s, timestamp=%s, nonce=%s, echostr=%s", 
+        msg_signature, timestamp, nonce, echostr
     )
     try:
         crypt = get_wx_crypt()

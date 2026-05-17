@@ -25,6 +25,17 @@ import ierror
 请到官方网站 https://www.dlitz.net/software/pycrypto/ 下载pycrypto。
 下载后，按照README中的“Installation”小节的提示进行pycrypto安装。
 """
+# ---------------------------------------------------------------------------
+# 错误码定义
+# ---------------------------------------------------------------------------
+class WXCryptError(Exception):
+    """加解密过程中的业务异常"""
+
+    def __init__(self, code: int, message: str):
+        super().__init__(message)
+        self.code = code
+        self.message = message
+
 class FormatException(Exception):
     pass
 
