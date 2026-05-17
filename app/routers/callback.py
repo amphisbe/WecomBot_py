@@ -31,7 +31,6 @@ from app.handlers.message_handler import handle_message
 from app.config import settings
 
 from app.vendor.wecom_callback.WXBizJsonMsgCrypt import WXBizJsonMsgCrypt, WXCryptError
-from app.vendor.wecom_callback.ierror import ierror
 
 logger = logging.getLogger(__name__)
 
